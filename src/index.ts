@@ -1,5 +1,4 @@
 // Note: write gql query in single line to reduce bundle size
-import crossFetch from 'cross-fetch';
 import { DEFAULT_AUTHORIZE_TIMEOUT_IN_SECONDS } from './constants';
 import * as Types from './types';
 import {
@@ -34,7 +33,7 @@ const userFragment =
 const authTokenFragment = `message access_token expires_in refresh_token id_token should_show_email_otp_screen should_show_mobile_otp_screen should_show_totp_screen authenticator_scanner_image authenticator_secret authenticator_recovery_codes user { ${userFragment} }`;
 
 // set fetch based on window object. Cross fetch have issues with umd build
-const getFetcher = () => (hasWindow() ? window.fetch : crossFetch);
+const getFetcher = () => fetch;
 
 export * from './types';
 
