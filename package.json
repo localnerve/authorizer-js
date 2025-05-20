@@ -1,15 +1,15 @@
 {
   "name": "@localnerve/authorizer-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Lakhan Samani",
   "license": "MIT",
   "funding": "https://github.com/sponsors/authorizerdev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/authorizerdev/authorizer-js.git"
+    "url": "git+https://github.com/localnerve/authorizer-js.git"
   },
   "bugs": {
-    "url": "https://github.com/authorizerdev/authorizer-js/issues"
+    "url": "https://github.com/localnerve/authorizer-js/issues"
   },
   "exports": {
     ".": {
