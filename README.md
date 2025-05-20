@@ -1,5 +1,7 @@
 # Authorizer.js
 
+> This is a fork of @authorizerdev/authorizer-js that can be built with modern es bundlers (no cross-fetch), has fewer dependencies, and easier maintain
+
 [`@authorizerdev/authorizer-js`](https://www.npmjs.com/package/@authorizerdev/authorizer-js) is universal javaScript SDK for Authorizer API.
 It supports:
 

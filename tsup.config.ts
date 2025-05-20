@@ -6,7 +6,7 @@ export default defineConfig(() => [
   {
     entryPoints: ['src/index.ts'],
     outDir: 'lib',
-    target: 'node16',
+    target: 'node20',
     format: ['esm', 'cjs'],
     clean: true,
     dts: true,
