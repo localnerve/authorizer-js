@@ -6,3 +6,4 @@ lib
 lib/*
 .idea
 .history
+package-lock.json
