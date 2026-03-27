@@ -46,7 +46,7 @@ describe('Integration Tests - authorizer-js', () => {
   let authorizer: Authorizer;
 
   beforeAll(async () => {
-    container = await new GenericContainer('lakhansamani/authorizer:latest')
+    container = await new GenericContainer('localnerve/authorizer:latest')
       .withEnvironment(authorizerENV)
       .withExposedPorts(8080)
       .withWaitStrategy(Wait.forHttp('/health', 8080).forStatusCode(200))
