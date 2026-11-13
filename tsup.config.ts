@@ -9,7 +9,7 @@ export default defineConfig(() => [
     target: 'node20',
     format: ['esm', 'cjs'],
     clean: true,
-    dts: true,
+    dts: false,
     minify: true,
     external,
   },

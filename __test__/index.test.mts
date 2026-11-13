@@ -1,5 +1,9 @@
-import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers';
-import { ApiResponse, AuthToken, Authorizer } from '../lib';
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import { GenericContainer, Wait } from 'testcontainers';
+import type { StartedTestContainer } from 'testcontainers';
+import { Authorizer } from '../lib/index.mjs';
+import type { ApiResponse, AuthToken } from '../lib';
 
 const authorizerConfig = {
   authorizerURL: 'http://localhost:8080',
@@ -40,12 +44,12 @@ const authorizerENV = {
 const verificationRequests =
   'query {_verification_requests { verification_requests { id token email expires identifier } } }';
 
-describe('Integration Tests - authorizer-js', () => {
+describe('Integration Tests - authorizer-js', { timeout: 500_000 }, () => {
   let container: StartedTestContainer;
 
   let authorizer: Authorizer;
 
-  beforeAll(async () => {
+  before(async () => {
     container = await new GenericContainer('localnerve/authorizer:latest')
       .withEnvironment(authorizerENV)
       .withExposedPorts(8080)
@@ -63,13 +67,13 @@ describe('Integration Tests - authorizer-js', () => {
     // get metadata
     const metadataRes = await authorizer.getMetaData();
     // await sleep(50000);
-    expect(metadataRes?.data).toBeDefined();
+    assert.notEqual(metadataRes?.data, undefined);
     if (metadataRes?.data?.client_id) {
       authorizer.config.clientID = metadataRes?.data?.client_id;
     }
   });
 
-  afterAll(async () => {
+  after(async () => {
     await container.stop();
   });
 
@@ -79,9 +83,9 @@ describe('Integration Tests - authorizer-js', () => {
       password: testConfig.password,
       confirm_password: testConfig.password,
     });
-    expect(signupRes?.data).toBeDefined();
-    expect(signupRes?.errors).toHaveLength(0);
-    expect(signupRes?.data?.message?.length).not.toEqual(0);
+    assert.notEqual(signupRes?.data, undefined);
+    assert.equal(signupRes?.errors.length, 0);
+    assert.notEqual(signupRes?.data?.message?.length, 0);
   });
 
   it('should verify email', async () => {
@@ -95,17 +99,17 @@ describe('Integration Tests - authorizer-js', () => {
     const requests =
       verificationRequestsRes?.data?._verification_requests
         .verification_requests;
-    expect(verificationRequestsRes?.data).toBeDefined();
-    expect(verificationRequestsRes?.errors).toHaveLength(0);
+    assert.notEqual(verificationRequestsRes?.data, undefined);
+    assert.equal(verificationRequestsRes?.errors.length, 0);
     const item = requests.find(
       (i: { email: string }) => i.email === testConfig.email,
     );
-    expect(item).not.toBeNull();
+    assert.notEqual(item, null);
 
     const verifyEmailRes = await authorizer.verifyEmail({ token: item.token });
-    expect(verifyEmailRes?.data).toBeDefined();
-    expect(verifyEmailRes?.errors).toHaveLength(0);
-    expect(verifyEmailRes?.data?.access_token?.length).toBeGreaterThan(0);
+    assert.notEqual(verifyEmailRes?.data, undefined);
+    assert.equal(verifyEmailRes?.errors.length, 0);
+    assert.ok((verifyEmailRes?.data?.access_token?.length ?? 0) > 0);
   });
 
   let loginRes: ApiResponse<AuthToken> | null;
@@ -115,12 +119,12 @@ describe('Integration Tests - authorizer-js', () => {
       password: testConfig.password,
       scope: ['openid', 'profile', 'email', 'offline_access'],
     });
-    expect(loginRes?.data).toBeDefined();
-    expect(loginRes?.errors).toHaveLength(0);
-    expect(loginRes?.data?.access_token.length).not.toEqual(0);
-    expect(loginRes?.data?.refresh_token?.length).not.toEqual(0);
-    expect(loginRes?.data?.expires_in).not.toEqual(0);
-    expect(loginRes?.data?.id_token.length).not.toEqual(0);
+    assert.notEqual(loginRes?.data, undefined);
+    assert.equal(loginRes?.errors.length, 0);
+    assert.notEqual(loginRes?.data?.access_token.length, 0);
+    assert.notEqual(loginRes?.data?.refresh_token?.length, 0);
+    assert.notEqual(loginRes?.data?.expires_in, 0);
+    assert.notEqual(loginRes?.data?.id_token.length, 0);
   });
 
   it('should validate jwt token', async () => {
@@ -128,9 +132,9 @@ describe('Integration Tests - authorizer-js', () => {
       token_type: 'access_token',
       token: loginRes?.data?.access_token || '',
     });
-    expect(validateRes?.data).toBeDefined();
-    expect(validateRes?.errors).toHaveLength(0);
-    expect(validateRes?.data?.is_valid).toEqual(true);
+    assert.notEqual(validateRes?.data, undefined);
+    assert.equal(validateRes?.errors.length, 0);
+    assert.equal(validateRes?.data?.is_valid, true);
   });
 
   it('should update profile successfully', async () => {
@@ -142,17 +146,17 @@ describe('Integration Tests - authorizer-js', () => {
         Authorization: `Bearer ${loginRes?.data?.access_token}`,
       },
     );
-    expect(updateProfileRes?.data).toBeDefined();
-    expect(updateProfileRes?.errors).toHaveLength(0);
+    assert.notEqual(updateProfileRes?.data, undefined);
+    assert.equal(updateProfileRes?.errors.length, 0);
   });
 
   it('should fetch profile successfully', async () => {
     const profileRes = await authorizer.getProfile({
       Authorization: `Bearer ${loginRes?.data?.access_token}`,
     });
-    expect(profileRes?.data).toBeDefined();
-    expect(profileRes?.errors).toHaveLength(0);
-    expect(profileRes?.data?.given_name).toMatch('bob');
+    assert.notEqual(profileRes?.data, undefined);
+    assert.equal(profileRes?.errors.length, 0);
+    assert.ok(profileRes?.data?.given_name?.includes('bob'));
   });
 
   it('should get access_token using refresh_token', async () => {
@@ -160,9 +164,9 @@ describe('Integration Tests - authorizer-js', () => {
       grant_type: 'refresh_token',
       refresh_token: loginRes?.data?.refresh_token,
     });
-    expect(tokenRes?.data).toBeDefined();
-    expect(tokenRes?.errors).toHaveLength(0);
-    expect(tokenRes?.data?.access_token.length).not.toEqual(0);
+    assert.notEqual(tokenRes?.data, undefined);
+    assert.equal(tokenRes?.errors.length, 0);
+    assert.notEqual(tokenRes?.data?.access_token.length, 0);
     if (loginRes && loginRes.data) {
       loginRes.data.access_token = tokenRes?.data?.access_token || '';
     }
@@ -172,16 +176,16 @@ describe('Integration Tests - authorizer-js', () => {
     const deactivateRes = await authorizer.deactivateAccount({
       Authorization: `Bearer ${loginRes?.data?.access_token}`,
     });
-    expect(deactivateRes?.data).toBeDefined();
-    expect(deactivateRes?.errors).toHaveLength(0);
+    assert.notEqual(deactivateRes?.data, undefined);
+    assert.equal(deactivateRes?.errors.length, 0);
   });
 
   it('should throw error while accessing profile after deactivation', async () => {
     const resp = await authorizer.getProfile({
       Authorization: `Bearer ${loginRes?.data?.access_token}`,
     });
-    expect(resp?.data).toBeUndefined();
-    expect(resp?.errors).toHaveLength(1);
+    assert.equal(resp?.data, undefined);
+    assert.equal(resp?.errors.length, 1);
   });
 
   describe('magic link login', () => {
@@ -189,8 +193,8 @@ describe('Integration Tests - authorizer-js', () => {
       const magicLinkLoginRes = await authorizer.magicLinkLogin({
         email: testConfig.maginLinkLoginEmail,
       });
-      expect(magicLinkLoginRes?.data).toBeDefined();
-      expect(magicLinkLoginRes?.errors).toHaveLength(0);
+      assert.notEqual(magicLinkLoginRes?.data, undefined);
+      assert.equal(magicLinkLoginRes?.errors.length, 0);
     });
     it('should verify email', async () => {
       const verificationRequestsRes = await authorizer.graphqlQuery({
@@ -205,14 +209,16 @@ describe('Integration Tests - authorizer-js', () => {
       const item = requests.find(
         (i: { email: string }) => i.email === testConfig.maginLinkLoginEmail,
       );
-      expect(item).not.toBeNull();
+      assert.notEqual(item, null);
       const verifyEmailRes = await authorizer.verifyEmail({
         token: item.token,
       });
-      expect(verifyEmailRes?.data).toBeDefined();
-      expect(verifyEmailRes?.errors).toHaveLength(0);
-      expect(verifyEmailRes?.data?.user?.signup_methods).toContain(
-        'magic_link_login',
+      assert.notEqual(verifyEmailRes?.data, undefined);
+      assert.equal(verifyEmailRes?.errors.length, 0);
+      assert.ok(
+        verifyEmailRes?.data?.user?.signup_methods?.includes(
+          'magic_link_login',
+        ),
       );
     });
   });
