@@ -138,7 +138,7 @@ async function main() {
 ### Prerequisites
 
 - [Pnpm](https://pnpm.io/installation)
-- [NodeJS](https://nodejs.org/en/download/)
+- [NodeJS 22.15 or newer](https://nodejs.org/en/download/)
 
 ### Setup
 

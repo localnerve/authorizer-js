@@ -35,12 +35,29 @@ const authTokenFragment = `message access_token expires_in refresh_token id_toke
 // set fetch based on window object. Cross fetch have issues with umd build
 const getFetcher = () => fetch;
 
+const toError = (value: unknown): Error => {
+  if (value instanceof Error) return value;
+  if (typeof value === 'string') return new Error(value);
+  if (typeof value === 'object' && value !== null) {
+    if (
+      'error_description' in value &&
+      typeof value.error_description === 'string'
+    )
+      return new Error(value.error_description);
+    if ('error' in value && typeof value.error === 'string')
+      return new Error(value.error);
+    if ('message' in value && typeof value.message === 'string')
+      return new Error(value.message);
+  }
+  return new Error(String(value));
+};
+
 export * from './types';
 
 export class Authorizer {
   // class variable
   config: ConfigType;
-  codeVerifier: string;
+  codeVerifier = '';
 
   // constructor
   constructor(config: ConfigType) {
@@ -125,7 +142,12 @@ export class Authorizer {
       // this includes access_token, id_token & refresh_token(optionally)
       return this.okResponse(iframeRes);
     } catch (err) {
-      if (err.error) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'error' in err &&
+        err.error
+      ) {
         window.location.replace(
           `${this.config.authorizerURL}/app?state=${encode(
             JSON.stringify(this.config),
@@ -133,7 +155,7 @@ export class Authorizer {
         );
       }
 
-      return this.errorResponse(err);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -156,7 +178,7 @@ export class Authorizer {
           JSON.stringify(this.config),
         )}&redirect_uri=${this.config.redirectURL}`,
       );
-      return this.errorResponse(err);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -179,7 +201,7 @@ export class Authorizer {
         ? this.errorResponse(forgotPasswordResp.errors)
         : this.okResponse(forgotPasswordResp?.data.forgot_password);
     } catch (error) {
-      return this.errorResponse([error]);
+      return this.errorResponse([toError(error)]);
     }
   };
 
@@ -194,7 +216,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data.meta);
     } catch (error) {
-      return this.errorResponse([error]);
+      return this.errorResponse([toError(error)]);
     }
   };
 
@@ -209,7 +231,7 @@ export class Authorizer {
         ? this.errorResponse(profileRes.errors)
         : this.okResponse(profileRes.data.profile);
     } catch (error) {
-      return this.errorResponse([error]);
+      return this.errorResponse([toError(error)]);
     }
   };
 
@@ -230,7 +252,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.session);
     } catch (err) {
-      return this.errorResponse(err);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -272,7 +294,7 @@ export class Authorizer {
 
       return this.okResponse(json);
     } catch (err) {
-      return this.errorResponse(err);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -289,7 +311,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.login);
     } catch (err) {
-      return this.errorResponse([new Error(err)]);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -305,7 +327,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.response);
     } catch (err) {
-      return this.errorResponse([err]);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -328,7 +350,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.magic_link_login);
     } catch (err) {
-      return this.errorResponse([err]);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -378,7 +400,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.resend_otp);
     } catch (err) {
-      return this.errorResponse([err]);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -397,7 +419,7 @@ export class Authorizer {
         ? this.errorResponse(resetPasswordRes.errors)
         : this.okResponse(resetPasswordRes.data?.reset_password);
     } catch (error) {
-      return this.errorResponse([error]);
+      return this.errorResponse([toError(error)]);
     }
   };
 
@@ -434,7 +456,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.signup);
     } catch (err) {
-      return this.errorResponse([err]);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -456,7 +478,7 @@ export class Authorizer {
         ? this.errorResponse(updateProfileRes.errors)
         : this.okResponse(updateProfileRes.data?.update_profile);
     } catch (error) {
-      return this.errorResponse([error]);
+      return this.errorResponse([toError(error)]);
     }
   };
 
@@ -472,7 +494,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.deactivate_account);
     } catch (error) {
-      return this.errorResponse([error]);
+      return this.errorResponse([toError(error)]);
     }
   };
 
@@ -492,7 +514,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.validate_jwt_token);
     } catch (error) {
-      return this.errorResponse([error]);
+      return this.errorResponse([toError(error)]);
     }
   };
 
@@ -511,7 +533,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.validate_session);
     } catch (error) {
-      return this.errorResponse([error]);
+      return this.errorResponse([toError(error)]);
     }
   };
 
@@ -530,7 +552,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.verify_email);
     } catch (err) {
-      return this.errorResponse([err]);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -549,7 +571,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.verify_email);
     } catch (err) {
-      return this.errorResponse([err]);
+      return this.errorResponse([toError(err)]);
     }
   };
 
@@ -568,7 +590,7 @@ export class Authorizer {
         ? this.errorResponse(res.errors)
         : this.okResponse(res.data?.verify_otp);
     } catch (err) {
-      return this.errorResponse([err]);
+      return this.errorResponse([toError(err)]);
     }
   };
 
